@@ -1,0 +1,43 @@
+/* Day stays quiet; night reveals slow, large-scale atmospheric light. */
+:root{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark;--paper:#080c18;--ink:#eceef5;--muted:#b0b9ce;--accent:#91a1f4;--line:rgba(173,188,232,.19)}
+body{isolation:isolate;transition:background-color .7s ease,color .5s ease}
+.night-sky{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;opacity:0;visibility:hidden;transition:opacity 1.4s ease,visibility 1.4s;contain:strict;background:linear-gradient(145deg,#080c18 20%,#0b1123 65%,#080c18)}
+[data-theme="dark"] .night-sky{opacity:1;visibility:visible}
+.nebula{position:absolute;pointer-events:none;filter:blur(35px);animation-play-state:paused!important}
+.night-sky:after{content:"";position:absolute;inset:-30%;pointer-events:none;background:radial-gradient(ellipse at 65% 65%,transparent 35%,rgba(54,180,221,.13) 40%,rgba(95,107,248,.24) 43%,rgba(138,63,195,.11) 47%,transparent 54%);filter:blur(20px);transform:rotate(-22deg) translate(-4%,5%);animation:wave-drift 16s ease-in-out -5s infinite alternate;animation-play-state:paused}
+[data-theme="dark"] .night-sky:after{animation-play-state:running}
+@keyframes wave-drift{to{transform:rotate(5deg) translate(9%,-9%) scale(1.1)}}
+[data-theme="dark"] .nebula{animation-play-state:running!important}
+.nebula-blue{width:105vw;height:100vh;top:-40vh;right:-28vw;background:radial-gradient(ellipse at 50% 52%,rgba(56,85,227,.6),rgba(44,65,174,.25) 32%,transparent 66%);transform:rotate(-24deg);animation:blue-drift 18s ease-in-out -6s infinite alternate}
+.nebula-violet{width:100vw;height:95vh;left:-46vw;top:18vh;background:radial-gradient(ellipse at 48% 52%,rgba(118,49,169,.4),rgba(79,40,144,.2) 36%,transparent 65%);transform:rotate(26deg);animation:violet-drift 22s ease-in-out -8s infinite alternate}
+.nebula-teal{width:110vw;height:75vh;right:-38vw;bottom:-38vh;background:radial-gradient(ellipse at 50% 50%,rgba(34,172,185,.36),rgba(25,95,152,.2) 38%,transparent 65%);transform:rotate(-22deg);animation:teal-drift 16s ease-in-out -4s infinite alternate}
+.starlight{position:absolute;inset:0;opacity:.45;background-image:radial-gradient(circle at 8% 13%,#bfcafb 0 .65px,transparent 1.3px),radial-gradient(circle at 79% 19%,#bfcafb 0 .7px,transparent 1.4px),radial-gradient(circle at 94% 60%,#abcfe3 0 .7px,transparent 1.4px),radial-gradient(circle at 21% 69%,#bcb4df 0 .65px,transparent 1.3px),radial-gradient(circle at 62% 85%,#bfcafb 0 .7px,transparent 1.4px),radial-gradient(circle at 41% 37%,#bfcafb 0 .6px,transparent 1.2px)}
+@keyframes blue-drift{to{transform:translate(-10vw,12vh) rotate(-6deg) scale(1.12)}}
+@keyframes violet-drift{to{transform:translate(12vw,-10vh) rotate(8deg) scale(1.15)}}
+@keyframes teal-drift{to{transform:translate(-15vw,-15vh) rotate(-38deg) scale(1.08)}}
+.theme-toggle{flex:none;display:grid;place-items:center;position:relative;width:40px;height:40px;margin-left:28px;padding:0;border:1px solid var(--line);border-radius:50%;color:var(--ink);background:transparent;cursor:pointer;transition:border-color .25s,color .25s,background .25s}
+.theme-toggle[hidden]{display:none}
+.theme-toggle:hover{color:var(--accent);border-color:var(--accent)}
+.theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:5px}
+.theme-toggle svg{width:20px;height:20px;grid-area:1/1;transition:opacity .4s,transform .5s}
+.sun-icon{opacity:0;transform:rotate(-40deg) scale(.7)}
+[data-theme="dark"] .moon-icon{opacity:0;transform:rotate(40deg) scale(.7)}
+[data-theme="dark"] .sun-icon{opacity:1;transform:rotate(0) scale(1)}
+[data-theme="dark"] .theme-toggle{background:rgba(126,147,239,.06)}
+[data-theme="dark"] .paper-links{color:rgba(176,185,206,.45)}
+[data-theme="dark"] .section-heading{border-bottom-color:rgba(193,202,227,.4)}
+[data-theme="dark"] .intro a{text-decoration-color:rgba(176,185,206,.45)}
+[data-theme="dark"] .intro a:hover{text-decoration-color:var(--accent)}
+[data-theme="dark"] .geometry{color:#96aaff;opacity:.42}
+.portrait-night{display:none}
+[data-theme="dark"] .portrait-day{display:none}
+[data-theme="dark"] .portrait-night{display:block;filter:saturate(.86);object-position:50% 43%;clip-path:none;mask-image:radial-gradient(ellipse 83% 86% at 50% 49%,#000 82%,transparent 100%);-webkit-mask-image:radial-gradient(ellipse 83% 86% at 50% 49%,#000 82%,transparent 100%)}
+/* The supplied transparent PNGs keep their original color and highlights. */
+[data-theme="dark"] .paper-image{mix-blend-mode:normal;background:transparent}
+
+[data-theme="dark"] ::selection{background:#465799;color:#fff}
+[data-theme="dark"] .skip-link{background:#eceef5;color:#080c18}
+@media(max-width:720px){.theme-toggle{width:36px;height:36px;margin-left:20px}.nebula{filter:blur(24px)}.nebula-blue{width:170vw;right:-80vw}.nebula-violet{width:165vw;left:-100vw}.nebula-teal{width:160vw;right:-90vw}}
+@media(max-width:360px){.theme-toggle{margin-left:14px}.site-header nav{gap:15px}}
+@media(prefers-reduced-motion:reduce){.nebula,.night-sky:after{animation:none!important}body,.night-sky,.theme-toggle,.theme-toggle svg{transition:none}}
