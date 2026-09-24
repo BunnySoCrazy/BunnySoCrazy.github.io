@@ -1,4 +1,6 @@
 (() => {
+  const night = new Image();
+  night.src = 'assets/me_night.webp';
   const root = document.documentElement;
   let saved = 'light';
   try { saved = localStorage.getItem('pu-li-theme') || 'light'; } catch {}
@@ -15,6 +17,9 @@
   };
   document.addEventListener('DOMContentLoaded', () => {
     update();
+    document.querySelectorAll('img.portrait').forEach((img) => {
+      if (typeof img.decode === 'function') img.decode().catch(() => {});
+    });
     document.querySelector('.theme-toggle').addEventListener('click', () => {
       root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
       try { localStorage.setItem('pu-li-theme', root.dataset.theme); } catch {}
