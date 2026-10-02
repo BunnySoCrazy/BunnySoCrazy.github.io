@@ -11,6 +11,9 @@
   let scrollDismissed = false, dismissSwipe = null;
   const poster = document.getElementById('dialog-poster');
   const neighborAnimations = new Map();
+  const atlasURL = 'assets/films-atlas-v1.webp';
+  const transparentPoster = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="2" height="3"/%3E';
+  const atlasPosition = index => `${(index % 10) * 100 / 9}% ${Math.floor(index / 10) * 100 / 9}%`;
   const hoverPointer = matchMedia('(hover: hover) and (pointer: fine)');
   let hovered = null, hoverMoving = false;
 
@@ -106,11 +109,23 @@
     if (frame) cancelAnimationFrame(frame);
     frame = 0;
     lastTime = 0;
-    const from = card.querySelector('img').getBoundingClientRect();
+    const from = card.querySelector('.film-poster').getBoundingClientRect();
     selectedCard = card;
     closing = false;
     scrollDismissed = false;
-    poster.src = film.poster;
+    // The already-decoded thumbnail is an immediate placeholder for the full poster.
+    poster.src = transparentPoster;
+    poster.style.backgroundImage = `url("${atlasURL}")`;
+    poster.style.backgroundSize = '1000% 1000%';
+    poster.style.backgroundPosition = card.querySelector('.film-poster').style.backgroundPosition;
+    const fullPoster = new Image();
+    fullPoster.src = film.poster;
+    fullPoster.decode().then(() => {
+      if (dialog.open && selectedCard === card && !closing) {
+        poster.src = fullPoster.src;
+        poster.style.backgroundImage = 'none';
+      }
+    }).catch(() => {});
     poster.alt = `Poster for ${film.displayTitle}`;
     document.getElementById('dialog-title').textContent = film.title;
     document.getElementById('dialog-subtitle').textContent = film.displayTitle === film.title
@@ -145,7 +160,7 @@
         function returnToGallery(now) {
           const t = Math.min(1, (now - start) / duration);
           const ease = 1 - Math.pow(1 - t, 3);
-          const to = selectedCard.querySelector('img').getBoundingClientRect();
+          const to = selectedCard.querySelector('.film-poster').getBoundingClientRect();
           const mix = key => from[key] + (to[key] - from[key]) * ease;
           poster.style.transform = `translate(${mix('left')-resting.left}px,${mix('top')-resting.top}px) scale(${mix('width')/resting.width},${mix('height')/resting.height})`;
           if (t < 1) requestAnimationFrame(returnToGallery); else resolve();
@@ -171,17 +186,11 @@
     card.className = 'film-card';
     card.type = 'button';
     card.setAttribute('aria-label', `View ${film.displayTitle}${film.year ? ` (${film.year})` : ''}`);
-    const image = document.createElement('img');
-    image.src = film.poster;
-    image.alt = '';
-    image.decoding = 'async';
-    image.draggable = false;
+    const image = document.createElement('span');
+    image.className = 'film-poster';
+    image.setAttribute('aria-hidden', 'true');
+    image.style.backgroundPosition = atlasPosition(index);
     card.append(image);
-    const caption = document.createElement('span');
-    caption.className = 'film-caption';
-    caption.textContent = film.title;
-    caption.setAttribute('aria-hidden', 'true');
-    card.append(caption);
     card.addEventListener('click', event => { if (!suppressClick || event.detail === 0) showFilm(film, card); });
     card.addEventListener('pointerenter', event => { if (event.pointerType === 'mouse') setHovered(items[index]); });
     card.addEventListener('pointerleave', () => { if (hovered === items[index]) setHovered(null); });
@@ -350,6 +359,9 @@
 
   async function init() {
     try {
+      const atlas = new Image();
+      atlas.src = atlasURL;
+      const atlasReady = atlas.decode().then(() => true, () => false);
       const response = await fetch('films-data.json');
       if (!response.ok) throw new Error(`Film list: ${response.status}`);
       const {films} = await response.json();
@@ -357,6 +369,8 @@
       items = films.map(makeCard);
       grid.append(...items.map(item => item.card));
       measure();
+      if (!await atlasReady) throw new Error('Film thumbnail sheet could not be loaded');
+      grid.classList.add('is-ready');
     } catch (error) {
       grid.classList.add('film-grid-error');
       grid.textContent = 'The film archive could not be loaded. Please refresh to try again.';
