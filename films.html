@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A visual archive of films watched by Pu Li.">
+  <meta name="theme-color" content="#e9e8e2">
+  <title>Films — Pu Li</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23253553'/%3E%3Cpath d='M20 47V17h11c16 0 16 22 0 22H20M38 47h11' fill='none' stroke='%23fff' stroke-width='4'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="films.css?v=20261002-hover">
+  <script src="films.js?v=20261002-hover" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#film-grid">Skip to films</a>
+  <header class="film-header">
+    <a class="film-home" href="index.html" aria-label="Back to Pu Li's homepage">Pu Li<span class="home-dot">.</span></a>
+    <span class="header-label">Film journal</span>
+    <a class="film-close" href="index.html">Back <span aria-hidden="true">×</span></a>
+  </header>
+
+  <main>
+    <section class="scroll-gallery" aria-label="Watched film posters">
+      <div class="gallery-viewport">
+        <div class="gallery-track">
+          <div class="film-grid" id="film-grid" tabindex="0" role="region" aria-label="Film gallery. Scroll, drag, or use the arrow keys to explore."></div>
+        </div>
+        <button class="credits-trigger" type="button">Credits</button>
+        <div class="scroll-note" aria-hidden="true">Scroll to explore</div>
+      </div>
+    </section>
+
+  </main>
+    <dialog class="film-dialog credits-dialog" id="credits-dialog" aria-labelledby="credits-title">
+      <button class="dialog-close" type="button" aria-label="Close credits">×</button>
+      <div class="film-credits">
+        <h2 id="credits-title">Credits</h2>
+        <div class="credits-copy">
+          <a class="tmdb-credit" href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer" aria-label="The Movie Database">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Tmdb.new.logo.svg" alt="TMDB logo" width="40" height="29">
+            <span>TMDB</span>
+          </a>
+          <p>This product uses the TMDB API but is not endorsed or certified by TMDB. Film artwork and metadata are sourced from TMDB; watched-film titles were selected from my own viewing record.</p>
+        </div>
+      </div>
+    </dialog>
+
+  <dialog class="film-dialog film-stage" id="film-dialog" aria-labelledby="dialog-title">
+    <button class="dialog-close" type="button" aria-label="Close film details">Close <span aria-hidden="true">×</span></button>
+    <div class="dialog-layout">
+      <img id="dialog-poster" alt="">
+      <div class="dialog-copy">
+        <p class="dialog-eyebrow">FROM THE FILM ARCHIVE <span id="dialog-number"></span></p>
+        <h2 id="dialog-title"></h2>
+        <p id="dialog-subtitle"></p>
+        <div class="dialog-links">
+          <a id="dialog-douban" href="#" target="_blank" rel="noopener noreferrer">Douban <span aria-hidden="true">↗</span></a>
+          <a id="dialog-tmdb" href="#" target="_blank" rel="noopener noreferrer">TMDB <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+    </div>
+  </dialog>
+</body>
+</html>
