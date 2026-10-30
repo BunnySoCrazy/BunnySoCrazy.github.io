@@ -41,6 +41,16 @@ function boot(){
   const enemyViews=new Map(),projectileViews=new Map(),pickupViews=new Map(),effects=[];
   const game=new Match();let mode='ready',yaw=0,pitch=0,fire=false,keys=new Set(),last=0,acc=0,recoil=0,flash=0,hitUntil=0,damageUntil=0,noticeUntil=0,muted=false,audio=null,moved=0,dragAim=false,dragging=false,mouseX=0,mouseY=0;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sights=[{y:.111,tilt:0,z:-.48,fov:60},{y:.149,tilt:.03,z:-.58,fov:64},{y:.207,tilt:0,z:-.58,fov:52}];
+  let aimHeld=false,aimToggle=false,aimBlend=0;
+  let lookSettings={sensitivity:1,aimSensitivity:.7};
+  try{const saved=JSON.parse(localStorage.getItem('crossline-controls')||'{}');for(const [key,min,max]of [['sensitivity',.25,3],['aimSensitivity',.3,1.2]])if(typeof saved[key]==='number'&&Number.isFinite(saved[key]))lookSettings[key]=THREE.MathUtils.clamp(saved[key],min,max);}catch{}
+  for(const [id,key]of [['sensitivity','sensitivity'],['aim-sensitivity','aimSensitivity']]){
+    const input=$(id),output=$(id+'-value');input.value=lookSettings[key];output.value=lookSettings[key].toFixed(2)+'×';
+    input.addEventListener('input',()=>{lookSettings[key]=Number(input.value);output.value=lookSettings[key].toFixed(2)+'×';try{localStorage.setItem('crossline-controls',JSON.stringify(lookSettings));}catch{}});
+  }
+  function clearAim(){aimHeld=false;aimToggle=false;aimBlend=0;document.body.classList.remove('aiming');}
+  function wantsAim(){return mode==='playing'&&(aimHeld||aimToggle)&&!game.reloadAt&&game.time>=game.player.dashUntil;}
   function createEnemy(e){
     const g=new THREE.Group(),armor=e.type==='runner'?materials.runner:e.type==='flanker'?materials.purple:materials.orange;
     const torso=new THREE.Mesh(geometry.body,armor);torso.position.y=1.05;torso.castShadow=true;g.add(torso);
@@ -64,10 +74,10 @@ function boot(){
       }
     }catch{}
   }
-  function showMenu(title,copy,label){$('overlay-title').textContent=title;$('overlay-copy').textContent=copy;start.textContent=label;overlay.hidden=false;document.body.classList.add('menu-open');document.body.classList.remove('playing');$('restart').hidden=mode!=='paused';$('pause').disabled=true;keys.clear();fire=false;}
+  function showMenu(title,copy,label){clearAim();$('overlay-title').textContent=title;$('overlay-copy').textContent=copy;start.textContent=label;overlay.hidden=false;document.body.classList.add('menu-open');document.body.classList.remove('playing');$('restart').hidden=mode!=='paused';$('pause').disabled=true;keys.clear();fire=false;}
   function pauseGame(){if(mode==='playing'){mode='paused';dragging=false;showMenu('Paused','', 'Resume');if(document.pointerLockElement===canvas)document.exitPointerLock();}}
   function clearEffects(){for(const e of effects){scene.remove(e.mesh);e.mesh.geometry.dispose();e.mesh.material.dispose();}effects.length=0;}
-  function newRound(){game.reset();yaw=0;pitch=0;acc=0;recoil=0;hitUntil=0;damageUntil=0;clearEffects();}
+  function newRound(){game.reset();clearAim();yaw=0;pitch=0;acc=0;recoil=0;hitUntil=0;damageUntil=0;clearEffects();}
   async function enter(){
     if(mode==='ready'||mode==='finished')newRound();
     if(!canvas.requestPointerLock){begin(true);return;}
@@ -76,8 +86,9 @@ function boot(){
   function begin(fallback=false){
     if(mode==='playing')return;
     dragAim=fallback;dragging=false;mode='playing';overlay.hidden=true;document.body.classList.remove('menu-open');document.body.classList.add('playing');$('pause').disabled=false;acc=0;last=performance.now();canvas.focus();sound('loaded');
-    document.querySelector('.menu-note').textContent=fallback?'Hold the right mouse button to aim. Left click fires. Esc pauses.':'Click to capture the mouse. Esc pauses and releases it.';
-    if(fallback){$('notice').textContent='Right-drag to aim · Left click to fire';noticeUntil=game.time+6;}
+    document.querySelector('.menu-note').textContent=fallback?'Right-drag to look. Q toggles sights. Esc pauses.':'Hold right click to aim, or toggle with Q. Esc pauses.';
+    $('aim-key').textContent=fallback?'Q':'RMB / Q';
+    if(fallback){$('notice').textContent='Right-drag to look · Q to aim';noticeUntil=game.time+6;}
   }
   document.addEventListener('pointerlockchange',()=>{
     if(document.pointerLockElement===canvas)begin();
@@ -87,13 +98,14 @@ function boot(){
   start.addEventListener('click',enter);$('restart').addEventListener('click',()=>{mode='ready';enter();});$('pause').addEventListener('click',pauseGame);
   $('sound').addEventListener('click',()=>{muted=!muted;$('sound').textContent=muted?'Sound off':'Sound on';$('sound').setAttribute('aria-pressed',String(!muted));});
   document.addEventListener('mousemove',e=>{
-    if(mode==='playing'&&(document.pointerLockElement===canvas||(dragAim&&dragging))){const dx=dragAim?e.clientX-mouseX:e.movementX,dy=dragAim?e.clientY-mouseY:e.movementY;yaw-=dx*.0021;pitch=THREE.MathUtils.clamp(pitch-dy*.0021,-1.35,1.35);}
+    if(mode==='playing'&&(document.pointerLockElement===canvas||(dragAim&&dragging))){const dx=dragAim?e.clientX-mouseX:e.movementX,dy=dragAim?e.clientY-mouseY:e.movementY;const zoomScale=Math.tan(THREE.MathUtils.degToRad(camera.fov/2))/Math.tan(THREE.MathUtils.degToRad(38)),speed=.0021*lookSettings.sensitivity*THREE.MathUtils.lerp(1,lookSettings.aimSensitivity,aimBlend)*zoomScale;yaw-=dx*speed;pitch=THREE.MathUtils.clamp(pitch-dy*speed,-1.35,1.35);}
     mouseX=e.clientX;mouseY=e.clientY;
   });
-  canvas.addEventListener('mousedown',e=>{if(mode!=='playing')return;canvas.focus();if(e.button===0)fire=true;if(dragAim&&e.button===2){dragging=true;mouseX=e.clientX;mouseY=e.clientY;}});window.addEventListener('mouseup',e=>{if(e.button===0)fire=false;if(e.button===2)dragging=false;});canvas.addEventListener('contextmenu',e=>e.preventDefault());
+  canvas.addEventListener('mousedown',e=>{if(mode!=='playing')return;canvas.focus();if(e.button===0)fire=true;if(e.button===2){if(dragAim){dragging=true;mouseX=e.clientX;mouseY=e.clientY;}else{aimHeld=true;aimToggle=false;}}});window.addEventListener('mouseup',e=>{if(e.button===0)fire=false;if(e.button===2){dragging=false;aimHeld=false;}});canvas.addEventListener('contextmenu',e=>e.preventDefault());
   window.addEventListener('keydown',e=>{
     if(mode!=='playing'||e.ctrlKey||e.metaKey||e.altKey)return;
-    const k=e.key.toLowerCase();if(['w','a','s','d',' ','shift','r','1','2','3','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();keys.add(k);
+    const k=e.key.toLowerCase();if(['w','a','s','d',' ','shift','r','q','1','2','3','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();keys.add(k);
+    if(k==='q'&&!e.repeat){aimToggle=!(aimToggle||aimHeld);aimHeld=false;}
     if(k==='r'&&!e.repeat)game.reload();if(['1','2','3'].includes(k)&&!e.repeat)game.select(Number(k)-1);
     if(k==='escape'||k==='p')pauseGame();
   });
@@ -122,7 +134,13 @@ function boot(){
   function draw(dt){
     const p=game.player;if(mode==='playing')moved+=dt*Math.hypot((keys.has('w')?1:0)-(keys.has('s')?1:0),(keys.has('a')?1:0)-(keys.has('d')?1:0));
     camera.position.set(p.x,1.65+p.y,p.z);camera.rotation.set(pitch,yaw,0);
-    recoil=Math.max(0,recoil-dt*.5);hand.position.set(.23+(reduced?0:Math.sin(moved*9)*.008),-.24+(reduced?0:Math.abs(Math.cos(moved*9))*.008)-recoil*.25,-.61+recoil);hand.rotation.x=recoil*.9;hand.rotation.y=.07;
+    const sight=sights[game.weapon],target=wantsAim()?1:0;
+    aimBlend=reduced?target:THREE.MathUtils.lerp(aimBlend,target,1-Math.exp(-dt*18));
+    if(Math.abs(aimBlend-target)<.001)aimBlend=target;
+    document.body.classList.toggle('aiming',aimBlend>.7);
+    const fov=THREE.MathUtils.lerp(76,sight.fov,aimBlend);if(camera.fov!==fov){camera.fov=fov;camera.updateProjectionMatrix();}
+    recoil=Math.max(0,recoil-dt*.5);const bob=(reduced?0:.008)*(1-aimBlend*.9),kick=recoil*(1-aimBlend*.6);
+    hand.position.set(.23*(1-aimBlend)+Math.sin(moved*9)*bob,THREE.MathUtils.lerp(-.24,-sight.y,aimBlend)+Math.abs(Math.cos(moved*9))*bob-kick*.25,THREE.MathUtils.lerp(-.61,sight.z,aimBlend)+kick);hand.rotation.x=kick*.9+sight.tilt*aimBlend;hand.rotation.y=.07*(1-aimBlend);
     if(game.reloadAt){const t=1-(game.reloadAt-game.time)/WEAPONS[game.weapon].reload;hand.rotation.z=-Math.sin(t*Math.PI)*.6;hand.position.y-=Math.sin(t*Math.PI)*.16;}else hand.rotation.z=0;
     guns.forEach((g,i)=>{g.visible=i===game.weapon;if(g.visible)animateWeapon(g,i,recoil);});muzzle.position.copy(guns[game.weapon].userData.muzzle);muzzle.visible=mode==='playing'&&game.time<flash;
     const alive=new Set(game.enemies.map(e=>e.id));for(const [id,v]of enemyViews)if(!alive.has(id)){scene.remove(v.g);enemyViews.delete(id);}
