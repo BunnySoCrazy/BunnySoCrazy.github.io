@@ -12,7 +12,7 @@ button:focus-visible,a:focus-visible{outline:1px solid var(--ink);outline-offset
 .film-header>*{pointer-events:auto}
 .film-home{justify-self:start;font-size:20px;font-weight:600;letter-spacing:-.065em}
 .home-dot{color:#67837b}
-.header-label{font-size:11px;letter-spacing:.12em;color:var(--muted)}
+.header-label{grid-column:2;font-size:11px;letter-spacing:.12em;color:var(--muted)}
 .film-close{justify-self:end;display:flex;align-items:center;gap:12px;font-size:13px;color:var(--muted)}
 .film-close span{font-size:23px;font-weight:300;line-height:1}
 .film-close:hover{color:var(--ink)}
