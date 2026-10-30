@@ -34,6 +34,11 @@ button:focus-visible,a:focus-visible{outline:1px solid var(--ink);outline-offset
 .credits-trigger,.scroll-note{position:absolute;z-index:4;bottom:34px;color:var(--muted);font-size:12px}
 .credits-trigger{left:clamp(24px,3.5vw,64px);background:none;border:0;padding:6px 0;cursor:pointer}
 .credits-trigger:hover{color:var(--ink)}
+.game-entry{position:absolute;z-index:4;bottom:34px;left:50%;transform:translateX(-50%);padding:6px 0;font-size:12px;color:var(--muted);white-space:nowrap;transition:color .2s,opacity .6s}
+.game-entry:hover{color:var(--ink)}
+.film-focused .game-entry{opacity:0;pointer-events:none}
+@media(max-width:600px){.game-entry{bottom:19px;font-size:11px}.scroll-note{display:none}}
+@media(prefers-reduced-motion:reduce){.game-entry{position:fixed;bottom:0;left:auto;right:20px;transform:none;padding:15px 0;z-index:5}}
 .scroll-note{right:clamp(24px,3.5vw,64px);bottom:40px;pointer-events:none}
 .film-dialog{position:fixed;max-width:min(740px,calc(100vw - 32px));max-height:calc(100dvh - 40px);width:100%;padding:35px;border:0;background:var(--dialog-paper);color:var(--ink);box-shadow:0 32px 85px rgba(0,0,0,.12)}
 .film-dialog::backdrop{background:var(--dialog-backdrop);backdrop-filter:blur(12px)}
